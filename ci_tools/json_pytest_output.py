@@ -34,7 +34,6 @@ if __name__ == '__main__':
     p_args = parser.parse_args()
 
     outfile = ""
-    args = sys.argv[1:]
     output_file = 'test_json_result.json'
     summary = ""
 
