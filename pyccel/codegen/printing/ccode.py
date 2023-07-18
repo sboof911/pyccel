@@ -1064,10 +1064,8 @@ class CCodePrinter(CodePrinter):
         rank  = expr.rank
         if isinstance(expr.dtype, NativeInteger):
             self.add_import(c_imports['stdint'])
-        if not isinstance(dtype, CustomDataType):
+        if not dtype.startswith("struct"):
             dtype = self.find_in_dtype_registry(dtype, prec)
-        else:
-            dtype = "struct " + self._print(dtype).name
         if rank > 0:
             if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
                 if expr.rank > 15:
@@ -2162,7 +2160,7 @@ class CCodePrinter(CodePrinter):
     #================== CLASSES ==================
 
     def _print_CustomDataType(self, expr):
-        return expr
+        return 'struct ' + expr.name
 
     def _print_ClassDef(self, expr):
         return ''
