@@ -1067,7 +1067,7 @@ class CCodePrinter(CodePrinter):
         if not isinstance(dtype, CustomDataType):
             dtype = self.find_in_dtype_registry(dtype, prec)
         else:
-            dtype = 'struct ' + str(dtype)
+            dtype = "struct " + self._print(dtype).name
         if rank > 0:
             if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
                 if expr.rank > 15:
