@@ -339,13 +339,19 @@ class Bot:
             inputs["editable_string"] = "-e"
         self._GAI.run_workflow(f'{test}.yml', inputs)
 
-    def mark_as_draft(self):
+    @staticmethod
+    def mark_as_draft(pr_id):
         """
         Mark the pull request as a draft.
 
         Mark the pull request specified in the constructor as a draft.
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request.
         """
-        cmds = [github_cli, 'pr', 'ready', str(self._pr_id), '--undo']
+        cmds = [github_cli, 'pr', 'ready', str(pr_id), '--undo']
 
         with subprocess.Popen(cmds, stderr=subprocess.PIPE, text=True) as p:
             _, err = p.communicate()
@@ -359,7 +365,7 @@ class Bot:
         This function should be called when one of the pull request
         check runs has failed.
         """
-        self.mark_as_draft()
+        self.mark_as_draft(self._pr_id)
         self._GAI.create_comment(self._pr_id, message_from_file('set_draft_failing.txt'))
 
     def request_mark_as_ready(self):
@@ -672,7 +678,8 @@ class Bot:
         print(self._pr_details)
         return self._pr_details['draft']
 
-    def post_unauthentificated_comment(self, comment):
+    @staticmethod
+    def post_unauthentificated_comment(pr_id, comment):
         """
         Post a comment to the pull request from a fork.
 
@@ -681,17 +688,20 @@ class Bot:
 
         Parameters
         ----------
+        pr_id : int
+            The id of the pull request.
+
         comment : str
             The comment to be left on the pull request.
         """
-        cmds = [github_cli, 'pr', 'comment', str(self._pr_id), '--body', comment]
+        cmds = [github_cli, 'pr', 'comment', str(pr_id), '--body', comment]
 
         with subprocess.Popen(cmds, stderr=subprocess.PIPE, text=True) as p:
             _, err = p.communicate()
         print(err)
 
     @staticmethod
-    def author_has_merged_pr(self, username):
+    def author_has_merged_pr(username):
         """
         Determine if an author has any merged PRs on the repository.
 
