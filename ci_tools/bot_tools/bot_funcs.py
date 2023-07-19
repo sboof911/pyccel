@@ -608,8 +608,9 @@ class Bot:
             return self._pr_id
         else:
             possible_prs = self._GAI.get_prs()
+            print(possible_prs)
             self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
-            self._pr_details = self._GAI.get_pr_details(pr_id)
+            self._pr_details = self._GAI.get_pr_details(self._pr_id)
             self._base = self._pr_details["base"]["sha"]
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
             return self._pr_id
