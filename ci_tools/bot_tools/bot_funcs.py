@@ -347,7 +347,7 @@ class Bot:
         """
         cmds = [github_cli, 'pr', 'ready', str(self._pr_id), '--undo']
 
-        with subprocess.Popen(cmds) as p:
+        with subprocess.Popen(cmds, stderr=subprocess.PIPE, text=True) as p:
             _, err = p.communicate()
         print(err)
 
@@ -370,7 +370,7 @@ class Bot:
         """
         cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
 
-        with subprocess.Popen(cmds) as p:
+        with subprocess.Popen(cmds, stderr=subprocess.PIPE, text=True) as p:
             _, err = p.communicate()
         print(err)
 
@@ -632,11 +632,11 @@ class Bot:
         """
         cmd = [git, 'diff', f"{self._base}..{self._ref}"]
         print(cmd)
-        with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
+        with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, text=True) as p:
             out, _ = p.communicate()
         diff = {f: None for f in out.strip().split('\n')}
         for f in diff:
-            with subprocess.Popen(cmd + [f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
+            with subprocess.Popen(cmd + [f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
                 out, err = p.communicate()
             if not err:
                 lines = out.split('\n')
@@ -686,7 +686,7 @@ class Bot:
         """
         cmds = [github_cli, 'pr', 'comment', str(self._pr_id), '--body', comment]
 
-        with subprocess.Popen(cmds) as p:
+        with subprocess.Popen(cmds, stderr=subprocess.PIPE, text=True) as p:
             _, err = p.communicate()
         print(err)
 
@@ -707,7 +707,7 @@ class Bot:
         """
         cmds = [github_cli, 'pr', 'list', '-A', username, '-s', 'merged', '--json', 'number']
 
-        with subprocess.Popen(cmds) as p:
+        with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
             out, err = p.communicate()
         print(err)
         prs = json.loads(out)
