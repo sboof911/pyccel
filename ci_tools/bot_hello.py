@@ -14,30 +14,38 @@ with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
 # Collect id from a pull request event with an opened action
 pr_id = event['number']
 
-bot = Bot(pr_id = pr_id)
+pr_info = event['pull_request']
 
-user = event['pull_request']['user']['login']
+user = pr_info['user']['login']
 
-# Check whether user is new and/or trusted
-trusted_user = bot.is_user_trusted(user)
-print("Current user trust level is : ", event['pull_request']['author_association'])
+print("Current user trust level is : ", pr_info['author_association'])
+
+if pr_info['head']['repo']['full_name'] != pr_info['base']['repo']['full_name']:
+    # If a fork with no access to secrets
+    trusted_user = pr_info['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'OWNER', 'MEMBER')
+
+else:
+
+    bot = Bot(pr_id = pr_id)
+
+    # Check whether user is new and/or trusted
+    trusted_user = bot.is_user_trusted(user)
+
 if trusted_user:
-    merged_prs = bot.GAI.get_prs('all')
-    has_merged_pr = any(pr for pr in merged_prs if pr['user']['login'] == user and pr['merged_at'])
-    new_user = has_merged_pr
+    new_user = Bot.author_has_merged_pr(pr_id, user)
 else:
     new_user = True
 
 # Choose appropriate message to welcome author
 file = 'welcome_newcomer.txt' if new_user else 'welcome_friend.txt'
 
-bot.GAI.create_comment(pr_id, message_from_file(file) + message_from_file('checklist.txt'))
+bot.post_unauthentificated_comment(message_from_file(file) + message_from_file('checklist.txt'))
 
 # Ensure PR is draft
-if not event['pull_request']['draft']:
+if not pr_info['draft']:
     bot.mark_as_draft(pr_id)
 
 # If unknown user ask for trust approval
 if not trusted_user:
-    bot.GAI.create_comment(pr_id, ", ".join(f'@{r}' for r in senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
+    bot.post_unauthentificated_comment(", ".join(f'@{r}' for r in senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
 

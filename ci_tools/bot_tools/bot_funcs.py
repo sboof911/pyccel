@@ -347,7 +347,7 @@ class Bot:
         """
         cmds = [github_cli, 'pr', 'ready', str(self._pr_id), '--undo']
 
-        with subprocess.Popen(cmds) as p:
+        with subprocess.Popen(cmds, stderr=subprocess.PIPE, text=True) as p:
             _, err = p.communicate()
         print(err)
 
@@ -370,7 +370,7 @@ class Bot:
         """
         cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
 
-        with subprocess.Popen(cmds) as p:
+        with subprocess.Popen(cmds, stderr=subprocess.PIPE, text=True) as p:
             _, err = p.communicate()
         print(err)
 
@@ -632,11 +632,11 @@ class Bot:
         """
         cmd = [git, 'diff', f"{self._base}..{self._ref}"]
         print(cmd)
-        with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
+        with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, text=True) as p:
             out, _ = p.communicate()
         diff = {f: None for f in out.strip().split('\n')}
         for f in diff:
-            with subprocess.Popen(cmd + [f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
+            with subprocess.Popen(cmd + [f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
                 out, err = p.communicate()
             if not err:
                 lines = out.split('\n')
@@ -671,6 +671,47 @@ class Bot:
     def is_pr_draft(self):
         print(self._pr_details)
         return self._pr_details['draft']
+
+    def post_unauthentificated_comment(self, comment):
+        """
+        Post a comment to the pull request from a fork.
+
+        Post a comment to the pull request. In the case of a forl, the CI does not
+        have access to secrets. It must therefore use the GitHub CI to post comments.
+
+        Parameters
+        ----------
+        comment : str
+            The comment to be left on the pull request.
+        """
+        cmds = [github_cli, 'pr', 'comment', str(self._pr_id), '--body', comment]
+
+        with subprocess.Popen(cmds, stderr=subprocess.PIPE, text=True) as p:
+            _, err = p.communicate()
+        print(err)
+
+    @staticmethod
+    def author_has_merged_pr(self, username):
+        """
+        Determine if an author has any merged PRs on the repository.
+
+        Use the GitHub command line interface to examine the PRs on the repository
+        and return any which were authored by the user and were subsequently
+        merged. The GitHub command line interface is used as forks do not have
+        access to secrets.
+
+        Parameters
+        ----------
+        username : str
+            The name of the user.
+        """
+        cmds = [github_cli, 'pr', 'list', '-A', username, '-s', 'merged', '--json', 'number']
+
+        with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
+            out, err = p.communicate()
+        print(err)
+        prs = json.loads(out)
+        return len(prs) != 0
 
     @property
     def GAI(self):
