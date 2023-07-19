@@ -32,20 +32,20 @@ else:
     trusted_user = bot.is_user_trusted(user)
 
 if trusted_user:
-    new_user = Bot.author_has_merged_pr(pr_id, user)
+    new_user = Bot.author_has_merged_pr(user)
 else:
     new_user = True
 
 # Choose appropriate message to welcome author
 file = 'welcome_newcomer.txt' if new_user else 'welcome_friend.txt'
 
-bot.post_unauthentificated_comment(message_from_file(file) + message_from_file('checklist.txt'))
+Bot.post_unauthentificated_comment(pr_id, message_from_file(file) + message_from_file('checklist.txt'))
 
 # Ensure PR is draft
 if not pr_info['draft']:
-    bot.mark_as_draft(pr_id)
+    Bot.mark_as_draft(pr_id)
 
 # If unknown user ask for trust approval
 if not trusted_user:
-    bot.post_unauthentificated_comment(", ".join(f'@{r}' for r in senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
+    Bot.post_unauthentificated_comment(pr_id, ", ".join(f'@{r}' for r in senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
 
