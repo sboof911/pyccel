@@ -339,21 +339,15 @@ class Bot:
             inputs["editable_string"] = "-e"
         self._GAI.run_workflow(f'{test}.yml', inputs)
 
-    @staticmethod
-    def mark_as_draft(pr_id):
+    def mark_as_draft(self):
         """
         Mark the pull request as a draft.
 
         Mark the pull request specified in the constructor as a draft.
-
-        Parameters
-        ----------
-        pr_id : int
-            The id of the pull request.
         """
-        cmds = [github_cli, 'pr', 'ready', str(pr_id), '--undo']
+        cmds = [github_cli, 'pr', 'ready', str(self._pr_id), '--undo']
 
-        with subprocess.Popen(cmds, stderr=subprocess.PIPE, text=True) as p:
+        with subprocess.Popen(cmds) as p:
             _, err = p.communicate()
         print(err)
 
@@ -365,7 +359,7 @@ class Bot:
         This function should be called when one of the pull request
         check runs has failed.
         """
-        self.mark_as_draft(self._pr_id)
+        self.mark_as_draft()
         self._GAI.create_comment(self._pr_id, message_from_file('set_draft_failing.txt'))
 
     def request_mark_as_ready(self):
@@ -376,7 +370,7 @@ class Bot:
         """
         cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
 
-        with subprocess.Popen(cmds, stderr=subprocess.PIPE, text=True) as p:
+        with subprocess.Popen(cmds) as p:
             _, err = p.communicate()
         print(err)
 
@@ -638,11 +632,11 @@ class Bot:
         """
         cmd = [git, 'diff', f"{self._base}..{self._ref}"]
         print(cmd)
-        with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, text=True) as p:
+        with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
             out, _ = p.communicate()
         diff = {f: None for f in out.strip().split('\n')}
         for f in diff:
-            with subprocess.Popen(cmd + [f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
+            with subprocess.Popen(cmd + [f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
                 out, err = p.communicate()
             if not err:
                 lines = out.split('\n')
