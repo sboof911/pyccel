@@ -14,13 +14,15 @@ with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
 # Collect id from a pull request event with an opened action
 pr_id = event['number']
 
-user = event['pull_request']['user']['login']
+pr_info = event['pull_request']
 
-print("Current user trust level is : ", event['pull_request']['author_association'])
+user = pr_info['user']['login']
 
-if pr['head']['repo']['full_name'] != pr['base']['repo']['full_name']:
+print("Current user trust level is : ", pr_info['author_association'])
+
+if pr_info['head']['repo']['full_name'] != pr_info['base']['repo']['full_name']:
     # If a fork with no access to secrets
-    trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'OWNER', 'MEMBER')
+    trusted_user = pr_info['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'OWNER', 'MEMBER')
 
 else:
 
@@ -40,7 +42,7 @@ file = 'welcome_newcomer.txt' if new_user else 'welcome_friend.txt'
 bot.post_unauthentificated_comment(message_from_file(file) + message_from_file('checklist.txt'))
 
 # Ensure PR is draft
-if not event['pull_request']['draft']:
+if not pr_info['draft']:
     bot.mark_as_draft(pr_id)
 
 # If unknown user ask for trust approval
