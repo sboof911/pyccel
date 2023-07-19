@@ -678,50 +678,18 @@ class Bot:
         print(self._pr_details)
         return self._pr_details['draft']
 
-    @staticmethod
-    def post_unauthentificated_comment(pr_id, comment):
+    def leave_comment(self, comment):
         """
-        Post a comment to the pull request from a fork.
+        Leave a comment on the pull request.
 
-        Post a comment to the pull request. In the case of a forl, the CI does not
-        have access to secrets. It must therefore use the GitHub CI to post comments.
+        Leave the specified comment on the pull request.
 
         Parameters
         ----------
-        pr_id : int
-            The id of the pull request.
-
         comment : str
             The comment to be left on the pull request.
         """
-        cmds = [github_cli, 'pr', 'comment', str(pr_id), '--body', comment]
-
-        with subprocess.Popen(cmds, stderr=subprocess.PIPE, text=True) as p:
-            _, err = p.communicate()
-        print(err)
-
-    @staticmethod
-    def author_has_merged_pr(username):
-        """
-        Determine if an author has any merged PRs on the repository.
-
-        Use the GitHub command line interface to examine the PRs on the repository
-        and return any which were authored by the user and were subsequently
-        merged. The GitHub command line interface is used as forks do not have
-        access to secrets.
-
-        Parameters
-        ----------
-        username : str
-            The name of the user.
-        """
-        cmds = [github_cli, 'pr', 'list', '-A', username, '-s', 'merged', '--json', 'number']
-
-        with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
-            out, err = p.communicate()
-        print(err)
-        prs = json.loads(out)
-        return len(prs) != 0
+        self._GAI.create_comment(self._pr_id, comment)
 
     @property
     def GAI(self):
