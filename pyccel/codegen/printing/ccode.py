@@ -2163,7 +2163,11 @@ class CCodePrinter(CodePrinter):
         return 'struct ' + expr.name
 
     def _print_ClassDef(self, expr):
-        return ''
+        methods = ''.join(self._print(method) for method in expr.methods)
+        return methods
+
+    def _print_ConstructorCall(self, expr):
+        return "Point__init__(&p);\n"
 
     #=================== MACROS ==================
 
